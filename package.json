@@ -24,13 +24,17 @@
     "typedoc": "^0.25.1",
     "typedoc-plugin-markdown": "^3.16.0",
     "typescript": "^4.6.4",
-    "vite": "^4.5.0"
+    "vite": "^4.5.0",
+    "@antfu/eslint-config": "^2.21.1",
+    "eslint": "9.4.0",
+    "eslint-plugin-format": "^0.1.1"
   },
   "dependencies": {
     "alpinejs": "^3.14.0",
+    "eslint": "^9.5.0",
     "unplugin-preprocessor-directives": "^1.0.3",
     "vite-plugin-top-level-await": "^1.4.1",
     "vite-plugin-wasm": "^3.3.0",
-    "warme-y2k": "^1.4.11"
+    "warme-y2k": "^1.4.14"
   }
 }
