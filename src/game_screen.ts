@@ -14,7 +14,7 @@ class GameScreen extends Screen {
   
   async onEnter() {
     dnaManager.setup([new DrawSpritesSystem(),new MovePlayerSystem()])
-    this.s = await spawnPlayer()
+    await spawnPlayer()
   }
 
   update(ts:number) {
@@ -22,7 +22,6 @@ class GameScreen extends Screen {
       dnaManager.update(this.elapsedTime);
       this.elapsedTime = 0;
     }
-
     this.elapsedTime += ts;
   }
 
