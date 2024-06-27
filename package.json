@@ -1,40 +1,39 @@
 {
-  "name": "warme-y2k-starter-kit",
-  "description": "WarmeY2K Starter-Kit",
-  "homepage": "https://warme-engine.com",
-  "keywords": [
-    "game-engine-2d",
-    "game-engine-3d",
-    "webgpu"
-  ],
-  "email": "aliyah.raijin@gmail.com",
-  "author": "Julien Rongiere",
-  "license": "MIT",
-  "version": "1.0.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview"
-  },
-  "devDependencies": {
-    "@types/alpinejs": "^3.13.10",
-    "@types/node": "^20.12.12",
-    "@vitejs/plugin-basic-ssl": "^1.0.2",
-    "typedoc": "^0.25.1",
-    "typedoc-plugin-markdown": "^3.16.0",
-    "typescript": "^4.6.4",
-    "vite": "^4.5.0",
-    "@antfu/eslint-config": "^2.21.1",
-    "eslint": "9.4.0",
-    "eslint-plugin-format": "^0.1.1"
-  },
-  "dependencies": {
-    "alpinejs": "^3.14.0",
-    "eslint": "^9.5.0",
-    "unplugin-preprocessor-directives": "^1.0.3",
-    "vite-plugin-top-level-await": "^1.4.1",
-    "vite-plugin-wasm": "^3.3.0",
-    "warme-y2k": "^1.4.14"
-  }
+	"name": "warme-y2k-starter-kit",
+	"type": "module",
+	"version": "1.0.0",
+	"description": "WarmeY2K Starter-Kit",
+	"author": "Julien Rongiere",
+	"license": "MIT",
+	"homepage": "https://warme-engine.com",
+	"keywords": [
+		"game-engine-2d",
+		"game-engine-3d",
+		"webgpu"
+	],
+	"email": "aliyah.raijin@gmail.com",
+	"scripts": {
+		"dev": "vite",
+		"build": "tsc && vite build",
+		"preview": "vite preview"
+	},
+	"dependencies": {
+		"alpinejs": "^3.14.0",
+		"unplugin-preprocessor-directives": "^1.0.3",
+		"vite-plugin-top-level-await": "^1.4.1",
+		"vite-plugin-wasm": "^3.3.0",
+		"warme-y2k": "^1.4.14"
+	},
+	"devDependencies": {
+		"@antfu/eslint-config": "^2.21.1",
+		"@types/alpinejs": "^3.13.10",
+		"@types/node": "^20.12.12",
+		"@vitejs/plugin-basic-ssl": "^1.0.2",
+		"eslint": "^9.4.0",
+		"eslint-plugin-format": "^0.1.1",
+		"typedoc": "^0.25.1",
+		"typedoc-plugin-markdown": "^3.16.0",
+		"typescript": "^4.6.4",
+		"vite": "^4.5.0"
+	}
 }
