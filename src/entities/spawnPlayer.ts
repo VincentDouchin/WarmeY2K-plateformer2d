@@ -1,4 +1,5 @@
 import { Gfx2SpriteJAS, dnaManager, gfx2TextureManager } from 'warme-y2k'
+import { Jump } from '../components/Jump'
 import { Collider } from '../components/Collider'
 import { Velocity } from '../components/Velocity'
 import { PlayerController } from '../components/PlayerController'
@@ -16,5 +17,6 @@ export const spawnPlayer = async () => {
 		new PlayerController(),
 		new Velocity(),
 		new Collider({ x: 2, y: 4 }, { x: 2, y: 4 }),
+		new Jump(50, 0.7, 3),
 	])
 }

@@ -2,7 +2,9 @@ import { Gfx2TileMap, Gfx2TileMapLayer, Screen, dnaManager, gfx2Manager } from '
 // ---------------------------------------------------------------------------------------
 import { DrawSpritesSystem } from './systems/drawSprites'
 import { MovePlayerSystem } from './systems/movePlayer'
-import { spawnPlayer } from './systems/spawnPlayer'
+import { spawnPlayer } from './entities/spawnPlayer'
+import { spawnPlatform } from './entities/spawnPlatform'
+import { MovePlatformSystem } from './systems/movePlatform'
 // ---------------------------------------------------------------------------------------
 const FPS = 60
 const MS_PER_FRAME = 1000 / FPS
@@ -19,13 +21,19 @@ class GameScreen extends Screen {
 	async onEnter() {
 		const tileMap = new Gfx2TileMap()
 		await tileMap.loadFromSpriteFusion('level1/map.json', 'level1/spritesheet.png')
-		dnaManager.setup([new DrawSpritesSystem(), new MovePlayerSystem(tileMap, tileMap.getTileLayer(0))])
+		dnaManager.setup([
+			new DrawSpritesSystem(),
+			new MovePlayerSystem(tileMap, tileMap.getTileLayer(0)),
+			new MovePlatformSystem(),
+		])
 		this.bgLayer.loadFromTileMap(tileMap, 0)
 		this.bgLayer.setPositionZ(1)
 		this.platformLayer.loadFromTileMap(tileMap, 1)
 		this.collisionLayer.loadFromTileMap(tileMap, 2)
-		await spawnPlayer()
-		gfx2Manager.setCameraScale(5, 5)
+		await Promise.all([spawnPlayer(), spawnPlatform(30, 30)])
+
+		gfx2Manager.setCameraScale(4, 4)
+		gfx2Manager.ctx.imageSmoothingEnabled = false
 	}
 
 	update(ts: number) {

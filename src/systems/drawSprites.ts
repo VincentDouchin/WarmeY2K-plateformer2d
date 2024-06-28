@@ -7,23 +7,26 @@ export class DrawSpritesSystem extends DNASystem {
 	constructor() {
 		super()
 		this.addRequiredComponentTypename('sprite')
+		this.addRequiredComponentTypename('position')
 	}
 
 	onEntityUpdate(ts: number, eid: number): void {
 		const { sprite } = dnaManager.getComponent(eid, Sprite)
 		const position = dnaManager.getComponent(eid, Position)
-		const velocity = dnaManager.getComponent(eid, Velocity)
-		if (position) {
-			sprite.setPosition(position.x, position.y)
-		}
-		if (velocity) {
-			if (velocity.x > 0.1 && Math.sign(velocity.x) === 1) {
-				sprite.setFlipX(false)
+		try {
+			const velocity = dnaManager.getComponent(eid, Velocity)
+			if (velocity) {
+				if (velocity.x > 0.1 && Math.sign(velocity.x) === 1) {
+					sprite.setFlipX(false)
+				}
+				if (velocity.x < 0.1 && Math.sign(velocity.x) === -1) {
+					sprite.setFlipX(true)
+				}
 			}
-			if (velocity.x < 0.1 && Math.sign(velocity.x) === -1) {
-				sprite.setFlipX(true)
-			}
+		} catch (e) {
+
 		}
+		sprite.setPosition(position.x, position.y)
 		sprite.update(ts)
 	}
 

@@ -1,7 +1,8 @@
-import { DNAComponent, Gfx2SpriteJAS } from "warme-y2k";
+import type { Gfx2SpriteJAS, Gfx2SpriteJSS } from 'warme-y2k'
+import { DNAComponent } from 'warme-y2k'
 
-export class Sprite extends DNAComponent{
-	constructor(public sprite :Gfx2SpriteJAS){
+export class Sprite<S extends Gfx2SpriteJAS | Gfx2SpriteJSS> extends DNAComponent {
+	constructor(public sprite: S) {
 		super('sprite')
 	}
 }

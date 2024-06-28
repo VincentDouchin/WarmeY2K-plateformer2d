@@ -1,37 +1,37 @@
 {
-  "compilerOptions": {
-    "typeRoots": [
-      "./node_modules/@webgpu/types",
-      "./node_modules/@types",
-      "./node_modules/warme-y2k/lib/core"
-    ],
-    "baseUrl": ".",
-    "target": "ESNext",
-    "useDefineForClassFields": true,
-    "module": "ESNext",
-    "lib": [
-      "ESNext",
-      "DOM"
-    ],
-    "moduleResolution": "Bundler",
-    "strict": true,
-    "sourceMap": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "esModuleInterop": true,
-    "noEmit": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": false,
-    "noImplicitReturns": true,
-    "skipLibCheck": true
-  },
-  "typedocOptions": {
-    "entryPoints": [
-      "src/main.js"
-    ],
-    "out": "docs"
-  },
-  "include": [
-    "src"
-  ]
+	"compilerOptions": {
+		"target": "ESNext",
+		"lib": [
+			"ESNext",
+			"DOM"
+		],
+		"useDefineForClassFields": true,
+		"baseUrl": ".",
+		"module": "ESNext",
+		"moduleResolution": "Node",
+		"resolveJsonModule": true,
+		"typeRoots": [
+			"./node_modules/@webgpu/types",
+			"./node_modules/@types",
+			"./node_modules/warme-y2k/lib/core"
+		],
+		"strict": true,
+		"noImplicitReturns": true,
+		"noUnusedLocals": true,
+		"noUnusedParameters": false,
+		"noEmit": true,
+		"sourceMap": true,
+		"esModuleInterop": true,
+		"isolatedModules": true,
+		"skipLibCheck": true
+	},
+	"typedocOptions": {
+		"entryPoints": [
+			"src/main.js"
+		],
+		"out": "docs"
+	},
+	"include": [
+		"src"
+	]
 }
