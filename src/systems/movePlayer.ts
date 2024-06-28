@@ -58,7 +58,6 @@ export class MovePlayerSystem extends DNASystem {
 		const bottom = this.map.getLocationRow(bounds.bottom - 0.1)
 		const top = this.map.getLocationRow(bounds.top)
 
-		const middleY = this.map.getLocationRow(position.y)
 		const right = this.map.getLocationCol(bounds.right)
 		const left = this.map.getLocationCol(bounds.left)
 		// gravity
