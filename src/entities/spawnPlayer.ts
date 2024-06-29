@@ -6,17 +6,17 @@ import { PlayerController } from '../components/PlayerController'
 import { Position } from '../components/Position'
 import { Sprite } from '../components/Sprite'
 
-export const spawnPlayer = async () => {
+export const spawnPlayer = async (x: number, y: number) => {
 	const animatedSprite = new Gfx2SpriteJAS()
 	await animatedSprite.loadFromFile('player/playerAnimations.jas')
 	animatedSprite.setTexture(await gfx2TextureManager.loadTexture('player/Player.png'))
 	animatedSprite.setOffset(4, 4)
 	dnaManager.createEntityWith([
-		new Position(40, 0),
+		new Position(x, y),
 		new Sprite(animatedSprite),
 		new PlayerController(),
 		new Velocity(),
 		new Collider({ x: 2, y: 4 }, { x: 2, y: 4 }),
-		new Jump(50, 0.7, 3),
+		new Jump(),
 	])
 }

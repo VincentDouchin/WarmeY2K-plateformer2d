@@ -1,11 +1,12 @@
 import type { Gfx2SpriteJAS, Gfx2TileLayer, Gfx2TileMap } from 'warme-y2k'
-import { DNASystem, dnaManager, gfx2Manager, inputManager } from 'warme-y2k'
-import { Platform } from '../components/Platform'
-import { Velocity } from '../components/Velocity'
-import { Sprite } from '../components/Sprite'
-import { Position } from '../components/Position'
+import { DNASystem, UT, dnaManager, eventManager, gfx2Manager, inputManager } from 'warme-y2k'
+import { f } from 'unplugin-preprocessor-directives/types-AxT-ueK5'
 import { Collider } from '../components/Collider'
 import { Jump } from '../components/Jump'
+import { Platform } from '../components/Platform'
+import { Position } from '../components/Position'
+import { Sprite } from '../components/Sprite'
+import { Velocity } from '../components/Velocity'
 
 export enum PlayerActions {
 	Left = 'left',
@@ -14,7 +15,16 @@ export enum PlayerActions {
 	Up = 'up',
 	Jump = 'jump',
 }
+interface Collision {
+	left: number | null
+	right: number | null
+	top: number | null
+	bottom: number | null
+	isGrounded: boolean
+	isAgainstWall: null | 'right' | 'left'
+}
 export class MovePlayerSystem extends DNASystem {
+	justPressedJump = false
 	constructor(public map: Gfx2TileMap, public collisionLayer: Gfx2TileLayer) {
 		super()
 		this.addRequiredComponentTypename('position')
@@ -26,6 +36,11 @@ export class MovePlayerSystem extends DNASystem {
 		inputManager.registerAction('keyboard', 'KeyW', PlayerActions.Up)
 		inputManager.registerAction('keyboard', 'KeyS', PlayerActions.Down)
 		inputManager.registerAction('keyboard', 'Space', PlayerActions.Jump)
+		eventManager.subscribe(inputManager, 'E_ACTION_ONCE', {}, (e: { actionId: string }) => {
+			if (e.actionId === PlayerActions.Jump) {
+				this.justPressedJump = true
+			}
+		})
 	}
 
 	onEntityUpdate(ts: number, eid: number): void {
@@ -48,33 +63,34 @@ export class MovePlayerSystem extends DNASystem {
 		if (inputForce === 0 && !jump.jumping) {
 			sprite.play('idle', true, true)
 		}
-		if (velocity.y === 0) jump.gravMultiplier = 1
-		if (velocity.y < -0.01) jump.gravMultiplier = jump.downwardMovementMultiplier
 
-		velocity.x += inputForce
+		velocity.x = UT.CLAMP(velocity.x + inputForce, -1, 1)
 		const bounds = collider.getBounds(position)
 
-		const middleX = this.map.getLocationCol(position.x)
-		const bottom = this.map.getLocationRow(bounds.bottom - 0.1)
-		const top = this.map.getLocationRow(bounds.top)
-
-		const right = this.map.getLocationCol(bounds.right)
-		const left = this.map.getLocationCol(bounds.left)
-		// gravity
-		const gravity = (-2 * jump.jumpHeight) * (jump.timeToJumpApex * jump.timeToJumpApex)
-		const gravMultiplier = jump.jumping && inputManager.isActiveAction(PlayerActions.Jump) ? 1 : jump.downwardMovementMultiplier
-		velocity.x *= 0.01 * ts
-		velocity.y -= (gravity / 9.81) * gravMultiplier * 0.03
-		let isGrounded = velocity.y >= 0 && this.areColliding([middleX, bottom])
+		// Apply more gravity when falling after a jump
+		const gravMultiplier = jump.jumping && inputManager.isActiveAction(PlayerActions.Jump) ? 1 : 3
+		// Reduce lateral friction when wall jumping
+		velocity.x *= 0.03 * ts
+		// Reduce vertical velocity when jumping
+		velocity.y = UT.LERP(velocity.y, 5 * gravMultiplier, ts / 1000)
+		const collisions = this.collideWithTiles(position, velocity, collider)
+		// let isGrounded = velocity.y >= 0 && this.areColliding([middleX, bottom])
 		if (velocity.y >= 0) {
-			const platform = this.collideWithPlatform(position, collider, bounds)
+			const platform = this.collideWithPlatform(position, bounds)
 			if (platform !== null) {
-				jump.platform = platform
-				velocity.y = 0
-				isGrounded = true
-				jump.jumping = false
+				if (inputManager.isActiveAction(PlayerActions.Down)) {
+					jump.dropDown = platform[0]
+				}
+				if (platform[0] !== jump.dropDown) {
+					position.y = platform[1] - collider.min.y
+					jump.platform = platform[0]
+					velocity.y = 0
+					collisions.isGrounded = true
+					jump.jumping = false
+				}
 			}
 		}
+		// Apply platform movement to the player
 		if (jump.platform !== null) {
 			const platformPosition = dnaManager.getComponent(jump.platform, Position)
 			const platform = dnaManager.getComponent(jump.platform, Platform)
@@ -82,63 +98,106 @@ export class MovePlayerSystem extends DNASystem {
 			position.y += platformPosition.y - platform.previousPosition.y
 		}
 
-		if (isGrounded) {
+		if (collisions.isGrounded) {
 			velocity.y = 0
 			jump.jumping = false
+			jump.dropDown = null
+			jump.wallJumping = false
 		} else {
 			jump.platform = null
 		}
 
-		if (inputManager.isActiveAction(PlayerActions.Jump) && isGrounded) {
-			const jumpSpeed = Math.sqrt(2 * 9.81 * jump.jumpHeight)
-			velocity.y -= jumpSpeed * 0.1
+		if (this.justPressedJump && collisions.isGrounded) {
+			velocity.y -= 3
 			sprite.play('jump', false)
 			jump.jumping = true
+			collisions.bottom = null
+		}
+		if (this.justPressedJump && collisions.isAgainstWall && jump.jumping && !collisions.isGrounded && this.justPressedJump) {
+			sprite.play('jump', false)
+			jump.wallJumping = true
+			velocity.y -= 3
+			velocity.x += (collisions.isAgainstWall === 'right' ? -1 : 1) * 20
+			collisions[collisions.isAgainstWall] = null
 		}
 		position.x += velocity.x
 		position.y += velocity.y
-
-		// this.collideWithTile(middleX, bottom, position, velocity, collider)
-		// this.collideWithTile(middleX, top, position, velocity, collider)
-		// this.collideWithTile(left, middleY, position, velocity, collider)
-		// this.collideWithTile(right, middleY, position, velocity, collider)
-
-		this.collideWithTile(left, bottom, position, velocity, collider)
-		this.collideWithTile(right, bottom, position, velocity, collider)
-
-		this.collideWithTile(left, top, position, velocity, collider)
-		this.collideWithTile(right, top, position, velocity, collider)
-
-		gfx2Manager.setCameraPosition(position.x, 30)
+		this.applyCollisions(collisions, position, collider, velocity)
+		gfx2Manager.setCameraPosition(position.x, 70)
+		this.justPressedJump = false
 	}
 
 	areColliding(...coords: [number, number][]) {
-		return coords.some(([col, row]) => this.collisionLayer.getTile(col, row) === 1)
+		return coords.some(([col, row]) => this.collisionLayer.getTile(col, row) !== undefined)
 	}
 
-	collideWithTile(col: number, row: number, position: { x: number, y: number }, velocity: { x: number, y: number }, collider: Collider) {
-		if (this.collisionLayer.getTile(col, row) === 1) {
-			const tileTop = (row + 1) * this.map.tileHeight
-			const tileBottom = row * this.map.tileHeight
-			const tileLeft = col * this.map.tileWidth
-			const tileRight = (col + 1) * this.map.tileWidth
-			const top = this.collisionLayer.getTile(col, row + 1) !== 1
-			const bottom = this.collisionLayer.getTile(col, row - 1) !== 1
-			const left = this.collisionLayer.getTile(col - 1, row) !== 1
-			const right = this.collisionLayer.getTile(col + 1, row) !== 1
-			if (bottom && tileTop > position.y + collider.min.y && velocity.y >= 0) {
-				position.y = tileBottom - collider.min.y
-			} else if (top && tileBottom < position.y - collider.max.y && velocity.y <= 0) {
-				position.y = tileTop + collider.max.y
-			} else if (right && tileLeft < position.x - collider.min.x && velocity.x <= 0) {
-				position.x = tileRight + collider.min.x
-			} else if (left && tileRight > position.x + collider.max.x && velocity.x >= 0) {
-				position.x = tileLeft - collider.max.x
-			}
+	applyCollisions(collisions: Collision, position: Position, collider: Collider, velocity: Velocity) {
+		if (collisions.left) {
+			position.x = collisions.left + collider.min.x
+			velocity.x = 0
+		}
+		if (collisions.right) {
+			position.x = collisions.right - collider.min.x
+			velocity.x = 0
+		}
+		if (collisions.bottom) {
+			position.y = collisions.bottom - collider.min.y
+			velocity.y = 0
+		}
+		if (collisions.top) {
+			position.y = collisions.top + collider.max.y
+			velocity.y = 0
 		}
 	}
 
-	collideWithPlatform(position: Position, collider: Collider, bounds: ReturnType<Collider['getBounds']>) {
+	collideWithTiles(position: Position, velocity: { x: number, y: number }, collider: Collider) {
+		const bounds = collider.getBounds(position)
+		const bottom = this.map.getLocationRow(bounds.bottom)
+		const top = this.map.getLocationRow(bounds.top)
+
+		const right = this.map.getLocationCol(bounds.right)
+		const left = this.map.getLocationCol(bounds.left)
+		const collisions: Collision = {
+			left: null,
+			right: null,
+			top: null,
+			bottom: null,
+			isGrounded: false,
+			isAgainstWall: null,
+		}
+		for (let col = left; col <= right; col++) {
+			for (let row = top; row <= bottom; row++) {
+				if (this.collisionLayer.getTile(col, row) !== undefined) {
+					const tileTop = (row + 1) * this.map.tileHeight
+					const tileBottom = row * this.map.tileHeight
+					const tileLeft = col * this.map.tileWidth
+					const tileRight = (col + 1) * this.map.tileWidth
+					const emptyTop = this.collisionLayer.getTile(col, row + 1) === undefined
+					const emptyBottom = this.collisionLayer.getTile(col, row - 1) === undefined
+					const emptyLeft = this.collisionLayer.getTile(col - 1, row) === undefined
+					const emptyRight = this.collisionLayer.getTile(col + 1, row) === undefined
+
+					const bounds = collider.getBounds(position)
+
+					if (emptyBottom && tileTop > bounds.bottom && velocity.y >= 0) {
+						collisions.bottom = tileBottom
+						collisions.isGrounded = true
+					} else if (emptyTop && tileBottom < bounds.top && velocity.y <= 0) {
+						collisions.top = tileTop
+					} else if (emptyLeft && tileLeft <= bounds.right) {
+						collisions.right = tileLeft
+						collisions.isAgainstWall = 'right'
+					} else if (emptyRight && tileRight >= bounds.left) {
+						collisions.isAgainstWall = 'left'
+						collisions.left = tileRight
+					}
+				}
+			}
+		}
+		return collisions
+	}
+
+	collideWithPlatform(position: Position, bounds: ReturnType<Collider['getBounds']>) {
 		const platforms = dnaManager.getAllComponents(Platform) as Map<number, Platform>
 		for (const [eid, _platform] of platforms.entries()) {
 			const platformPosition = dnaManager.getComponent(eid, Position)
@@ -148,8 +207,7 @@ export class MovePlayerSystem extends DNASystem {
 			const isWithinX = [bounds.left, bounds.right].some(b => platformBounds.left < b && b < platformBounds.right)
 			const isWithinY = platformBounds.top < bounds.bottom && bounds.bottom < platformBounds.bottom
 			if (isAbove && isWithinX && isWithinY) {
-				position.y = platformBounds.top - collider.max.y
-				return eid
+				return [eid, platformBounds.top]
 			}
 		}
 		return null
