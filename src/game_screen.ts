@@ -30,7 +30,7 @@ class GameScreen extends Screen {
 		this.bgLayer.setPositionZ(1)
 		this.platformLayer.loadFromTileMap(tileMap, 1)
 		this.collisionLayer.loadFromTileMap(tileMap, 2)
-		await Promise.all([spawnPlayer(), spawnPlatform(30, 30)])
+		await Promise.all([spawnPlayer(), spawnPlatform(30, 30), spawnPlatform(30, 10), spawnPlatform(30, -10)])
 
 		gfx2Manager.setCameraScale(4, 4)
 		gfx2Manager.ctx.imageSmoothingEnabled = false
