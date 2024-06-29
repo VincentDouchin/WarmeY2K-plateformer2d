@@ -4,6 +4,7 @@ export class Jump extends DNAComponent {
 	gravMultiplier = 1
 	jumping = false
 	platform: number | null = null
+	dropDown: number | null = null
 	constructor(
 		public jumpHeight: number,
 		public timeToJumpApex: number,
