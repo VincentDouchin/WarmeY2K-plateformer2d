@@ -1,6 +1,6 @@
 import type { Gfx2SpriteJAS, Gfx2TileLayer, Gfx2TileMap } from 'warme-y2k'
-import { DNASystem, UT, dnaManager, eventManager, gfx2Manager, inputManager } from 'warme-y2k'
-import { f } from 'unplugin-preprocessor-directives/types-AxT-ueK5'
+import { DNASystem, UT, dnaManager, gfx2Manager, inputManager } from 'warme-y2k'
+import { PlayerActions } from '../PlayerActions'
 import { Collider } from '../components/Collider'
 import { Jump } from '../components/Jump'
 import { Platform } from '../components/Platform'
@@ -8,13 +8,6 @@ import { Position } from '../components/Position'
 import { Sprite } from '../components/Sprite'
 import { Velocity } from '../components/Velocity'
 
-export enum PlayerActions {
-	Left = 'left',
-	Right = 'right',
-	Down = 'down',
-	Up = 'up',
-	Jump = 'jump',
-}
 interface Collision {
 	left: number | null
 	right: number | null
@@ -24,7 +17,6 @@ interface Collision {
 	isAgainstWall: null | 'right' | 'left'
 }
 export class MovePlayerSystem extends DNASystem {
-	justPressedJump = false
 	constructor(public map: Gfx2TileMap, public collisionLayer: Gfx2TileLayer) {
 		super()
 		this.addRequiredComponentTypename('position')
@@ -36,11 +28,6 @@ export class MovePlayerSystem extends DNASystem {
 		inputManager.registerAction('keyboard', 'KeyW', PlayerActions.Up)
 		inputManager.registerAction('keyboard', 'KeyS', PlayerActions.Down)
 		inputManager.registerAction('keyboard', 'Space', PlayerActions.Jump)
-		eventManager.subscribe(inputManager, 'E_ACTION_ONCE', {}, (e: { actionId: string }) => {
-			if (e.actionId === PlayerActions.Jump) {
-				this.justPressedJump = true
-			}
-		})
 	}
 
 	onEntityUpdate(ts: number, eid: number): void {
@@ -107,16 +94,16 @@ export class MovePlayerSystem extends DNASystem {
 			jump.platform = null
 		}
 
-		if (this.justPressedJump && collisions.isGrounded) {
+		if (jump.justPressedJump && collisions.isGrounded) {
 			velocity.y -= 3
 			sprite.play('jump', false)
 			jump.jumping = true
 			collisions.bottom = null
 		}
-		if (this.justPressedJump && collisions.isAgainstWall && jump.jumping && !collisions.isGrounded && this.justPressedJump) {
+		if (jump.justPressedJump && collisions.isAgainstWall && jump.jumping && !collisions.isGrounded) {
 			sprite.play('jump', false)
 			jump.wallJumping = true
-			velocity.y -= 3
+			velocity.y -= 4
 			velocity.x += (collisions.isAgainstWall === 'right' ? -1 : 1) * 20
 			collisions[collisions.isAgainstWall] = null
 		}
@@ -124,7 +111,7 @@ export class MovePlayerSystem extends DNASystem {
 		position.y += velocity.y
 		this.applyCollisions(collisions, position, collider, velocity)
 		gfx2Manager.setCameraPosition(position.x, 70)
-		this.justPressedJump = false
+		jump.justPressedJump = false
 	}
 
 	areColliding(...coords: [number, number][]) {
